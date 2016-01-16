@@ -8,6 +8,6 @@ Clone the repository and run:
 `npm install`
 
 Then start up the Webpack development server:
-`npm run start`
+`npm start`
 
 and hit to: `http://localhost:8080/exampel/`
