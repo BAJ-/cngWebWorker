@@ -4,7 +4,6 @@ class MainController {
     this.number = 1000;
     cngWebWorker.create(function(no) {
       function primeFact(n) {
-        console.log(n);
         var root = Math.sqrt(n),
             res = arguments[1] || [],
             x = 2;
