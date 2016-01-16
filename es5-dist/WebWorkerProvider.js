@@ -1,69 +1,74 @@
 'use strict';
 
-class CngWebWorkerProvider {
-  constructor() {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var CngWebWorkerProvider = function () {
+  function CngWebWorkerProvider() {
+    _classCallCheck(this, CngWebWorkerProvider);
+
     this.paramName = 'message';
     this.worker = { ready: false };
   }
 
-  setParamName(name) {
-    this.paramName = name;
-  }
+  _createClass(CngWebWorkerProvider, [{
+    key: 'setParamName',
+    value: function setParamName(name) {
+      this.paramName = name;
+    }
+  }, {
+    key: 'getWorkerTemplate',
+    value: function getWorkerTemplate(worker, paramName) {
+      return '\n      self.addEventListener(\'message\', function(e) {\n        var ' + paramName + ' = e.data;\n\n        var reply = {\n          result: undefined,\n          params: e.data\n        };\n\n        reply.result = (' + worker.toString() + ')(' + paramName + ');\n\n        self.postMessage(reply);\n      });\n      self.postMessage({ready: true});\n    ';
+    }
+  }, {
+    key: '$get',
+    value: function $get($q) {
+      var _this = this;
 
-  getWorkerTemplate(worker, paramName) {
-    return `
-      self.addEventListener('message', function(e) {
-        var ${ paramName } = e.data;
+      return {
+        sendMessage: function sendMessage(message) {
+          var deferred = $q.defer();
+          _this.worker.onmessage = function tempListener(e) {
+            deferred.resolve(e);
+          };
 
-        var reply = {
-          result: undefined,
-          params: e.data
-        };
+          _this.worker.postMessage(message);
+          return deferred.promise;
+        },
+        create: function create(worker, paramName) {
+          var webWorker,
+              deferred = $q.defer(),
+              blob;
 
-        reply.result = (${ worker.toString() })(${ paramName });
-
-        self.postMessage(reply);
-      });
-      self.postMessage({ready: true});
-    `;
-  }
-
-  $get($q) {
-    return {
-      sendMessage: message => {
-        var deferred = $q.defer();
-        this.worker.onmessage = function tempListener(e) {
-          deferred.resolve(e);
-        };
-
-        this.worker.postMessage(message);
-        return deferred.promise;
-      },
-      create: (worker, paramName) => {
-        var webWorker,
-            deferred = $q.defer(),
-            blob;
-
-        if (paramName) {
-          this.setParamName(paramName);
-        }
-
-        blob = new Blob([this.getWorkerTemplate(worker, this.paramName)], { type: 'application/javascript' });
-        webWorker = new Worker(URL.createObjectURL(blob));
-
-        webWorker.onmessage = e => {
-          if (e.data.ready) {
-            this.worker = webWorker;
-            deferred.resolve(webWorker);
-          } else {
-            deferred.reject();
+          if (paramName) {
+            _this.setParamName(paramName);
           }
-        };
 
-        return deferred.promise;
-      }
-    };
-  }
-}
+          blob = new Blob([_this.getWorkerTemplate(worker, _this.paramName)], { type: 'application/javascript' });
+          webWorker = new Worker(URL.createObjectURL(blob));
 
-export { CngWebWorkerProvider };
+          webWorker.onmessage = function (e) {
+            if (e.data.ready) {
+              _this.worker = webWorker;
+              deferred.resolve(webWorker);
+            } else {
+              deferred.reject();
+            }
+          };
+
+          return deferred.promise;
+        }
+      };
+    }
+  }]);
+
+  return CngWebWorkerProvider;
+}();
+
+exports.CngWebWorkerProvider = CngWebWorkerProvider;
