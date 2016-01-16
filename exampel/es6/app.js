@@ -1,5 +1,5 @@
 import { MainController } from './MainController';
-import { CngWebWorkerProvider } from './WebWorkerProvider';
+import { CngWebWorkerProvider } from '../../src/WebWorkerProvider';
 
 angular
   .module('wwApp', [])
