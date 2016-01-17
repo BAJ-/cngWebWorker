@@ -3,7 +3,6 @@
 class CngWebWorkerProvider {
   constructor() {
     this.paramName = 'message';
-    this.worker = {ready: false};
   }
 
   setParamName(name) {
@@ -53,8 +52,17 @@ class CngWebWorkerProvider {
 
         webWorker.onmessage = (e) => {
           if (e.data.ready) {
-            this.worker = webWorker;
-            deferred.resolve(webWorker);
+            deferred.resolve({
+              worker: webWorker,
+              sendMessage: function(message) {
+                var deferred = $q.defer();
+                this.worker.onmessage = function(e) {
+                  deferred.resolve(e);
+                };
+                this.worker.postMessage(message);
+                return deferred.promise;
+              }
+            });
           } else {
             deferred.reject();
           }
