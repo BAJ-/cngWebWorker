@@ -13,7 +13,6 @@ var CngWebWorkerProvider = function () {
     _classCallCheck(this, CngWebWorkerProvider);
 
     this.paramName = 'message';
-    this.worker = { ready: false };
   }
 
   _createClass(CngWebWorkerProvider, [{
@@ -55,8 +54,17 @@ var CngWebWorkerProvider = function () {
 
           webWorker.onmessage = function (e) {
             if (e.data.ready) {
-              _this.worker = webWorker;
-              deferred.resolve(webWorker);
+              deferred.resolve({
+                worker: webWorker,
+                sendMessage: function sendMessage(message) {
+                  var deferred = $q.defer();
+                  this.worker.onmessage = function (e) {
+                    deferred.resolve(e);
+                  };
+                  this.worker.postMessage(message);
+                  return deferred.promise;
+                }
+              });
             } else {
               deferred.reject();
             }
